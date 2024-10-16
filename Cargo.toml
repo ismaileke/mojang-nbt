@@ -1,0 +1,7 @@
+[package]
+name = "mojang-nbt"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+binary-utils = { git = "https://github.com/ismaileke/binary-utils.git", branch = "master" }
