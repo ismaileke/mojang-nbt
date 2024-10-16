@@ -5,9 +5,8 @@ use crate::tag::tag::Tag;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::iter::FromIterator;
-use std::sync::Arc;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct ListTag {
     tag_type: u8,
     value: Vec<Box<dyn Tag>>,
@@ -22,8 +21,8 @@ impl Tag for ListTag {
         TypeId::of::<ListTag>()
     }
 
-    fn get_value(&self) -> Vec<Arc<dyn Tag>> {
-        self.value.clone().into()
+    fn get_value(&self) -> Box<dyn Any> {
+        Box::new(self.value.clone())
     }
 
     fn get_type(&self) -> u8 {
@@ -41,7 +40,7 @@ impl Tag for ListTag {
 
 impl ListTag {
     pub fn new(value: Vec<Box<dyn Tag>>, tag_type: u8) -> Self {
-        let mut list_tag = Self {
+        let list_tag = Self {
             tag_type,
             value: Vec::from_iter(value),
         };
@@ -65,21 +64,21 @@ impl ListTag {
         self.value.len()
     }
 
-    pub fn push(&mut self, tag: Arc<dyn Tag>) {
+    pub fn push(&mut self, tag: Box<dyn Tag>) {
         self.check_tag_type(&tag);
-        self.value.push_back(tag);
+        self.value.push(tag);
     }
 
-    pub fn pop(&mut self) -> Option<Arc<dyn Tag>> {
+    pub fn pop(&mut self) -> Option<Box<dyn Tag>> {
         self.value.pop_back()
     }
 
-    pub fn unshift(&mut self, tag: Arc<dyn Tag>) {
+    pub fn unshift(&mut self, tag: Box<dyn Tag>) {
         self.check_tag_type(&tag);
         self.value.push_front(tag);
     }
 
-    pub fn shift(&mut self) -> Option<Arc<dyn Tag>> {
+    pub fn shift(&mut self) -> Option<Box<dyn Tag>> {
         self.value.pop_front()
     }
 
@@ -93,14 +92,14 @@ impl ListTag {
     }
 
     pub fn get(&self, index: usize) -> Box<dyn Tag> {
-        self.value[index].clone() // Cloned
+        self.value[index].clone_box() // Cloned
     }
 
-    pub fn first(&self) -> Option<Arc<dyn Tag>> {
+    pub fn first(&self) -> Option<Box<dyn Tag>> {
         self.value.front().cloned()
     }
 
-    pub fn last(&self) -> Option<Arc<dyn Tag>> {
+    pub fn last(&self) -> Option<Box<dyn Tag>> {
         self.value.back().cloned()
     }
 
@@ -128,7 +127,7 @@ impl ListTag {
         self.tag_type = tag_type;
     }
 
-    fn check_tag_type(&self, tag: &Arc<dyn Tag>) {
+    fn check_tag_type(&self, tag: &Box<dyn Tag>) {
         let tag_type = tag.get_type();
 
         if tag_type != self.tag_type {

@@ -33,7 +33,7 @@ pub trait BaseNBTSerializer {
 
     fn write_int_array(&mut self, value: Vec<u32>);
 
-    fn read_root(&mut self, _max_depth: u32) -> Box<TreeRoot> {
+    fn read_root(&mut self, _max_depth: u32) -> Box<TreeRoot> where Self: Sized {
         let tag_type =  self.read_byte();
 
         if tag_type == TAG_END {
@@ -45,7 +45,7 @@ pub trait BaseNBTSerializer {
         TreeRoot::new(NBT::create_tag(tag_type, self).expect("Base NBT Serializer Read Root Function"), root_name)
     }
 
-    fn read(&mut self, buffer: Vec<u8>, offset: &mut u32, max_depth: u32) -> Box<TreeRoot> {
+    fn read(&mut self, buffer: Vec<u8>, offset: &mut u32, max_depth: u32) -> Box<TreeRoot> where Self: Sized {
         *self.get_stream() = Stream::new(buffer, *offset);
 
         let data = self.read_root(max_depth);
@@ -55,7 +55,7 @@ pub trait BaseNBTSerializer {
         data
     }
 
-    fn read_headless(&mut self, buffer: Vec<u8>, offset: &mut u32, tag_type: u8, _max_depth: u32) -> Box<dyn Tag> {
+    fn read_headless(&mut self, buffer: Vec<u8>, offset: &mut u32, tag_type: u8, _max_depth: u32) -> Box<dyn Tag> where Self: Sized {
         *self.get_stream() = Stream::new(buffer, *offset);
 
         let data = NBT::create_tag(tag_type, self).expect("Base NBT Serializer Read Headless Function");
@@ -65,7 +65,7 @@ pub trait BaseNBTSerializer {
         data
     }
 
-    fn read_multiple(&mut self, buffer: Vec<u8>, max_depth: u32) -> Vec<Box<TreeRoot>> {
+    fn read_multiple(&mut self, buffer: Vec<u8>, max_depth: u32) -> Vec<Box<TreeRoot>> where Self: Sized {
         *self.get_stream() = Stream::new(buffer, 0);
 
         let mut return_value = Vec::new();
@@ -77,14 +77,14 @@ pub trait BaseNBTSerializer {
         return_value
     }
 
-    fn write_root(&mut self, root: Box<TreeRoot>) {
+    fn write_root(&mut self, root: Box<TreeRoot>) where Self: Sized {
         self.write_byte(root.get_tag().get_type());
         self.write_string(root.get_name());
 
-        root.get_tag().write(self.get_stream());
+        root.get_tag().write(self);
     }
 
-    fn write(&mut self, root: Box<TreeRoot>) -> Vec<u8> {
+    fn write(&mut self, root: Box<TreeRoot>) -> Vec<u8> where Self: Sized {
         *self.get_stream() = Stream::new(vec![], 0);
 
         self.write_root(root);
@@ -92,18 +92,18 @@ pub trait BaseNBTSerializer {
         self.get_stream().get_buffer()
     }
 
-    fn write_headless(&mut self, data: Box<dyn Tag>) -> Vec<u8> {
+    fn write_headless(&mut self, data: Box<dyn Tag>) -> Vec<u8> where Self: Sized {
         *self.get_stream() = Stream::new(vec![], 0);
 
-        data.write(self.get_stream());
+        data.write(self);
 
         self.get_stream().get_buffer()
     }
 
-    fn write_multiple(&mut self, tree_root: Vec<TreeRoot>) -> Vec<u8> {
+    fn write_multiple(&mut self, tree_root: Vec<Box<TreeRoot>>) -> Vec<u8> where Self: Sized {
         *self.get_stream() = Stream::new(vec![], 0);
 
-        for root in &tree_root {
+        for root in tree_root {
             self.write_root(root);
         }
 

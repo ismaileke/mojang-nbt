@@ -14,6 +14,6 @@ pub trait Tag: Any {
     fn write(&self, serializer: &mut dyn BaseNBTSerializer);
 
     fn clone_box(&self) -> Box<dyn Tag> {
-        Box::new(self.clone())
+        Box::new(self)
     }
 }

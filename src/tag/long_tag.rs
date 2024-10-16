@@ -16,8 +16,8 @@ impl Tag for LongTag {
         TypeId::of::<LongTag>()
     }
 
-    fn get_value(&self) -> i64 {
-        self.value
+    fn get_value(&self) -> Box<dyn Any> {
+        Box::new(self.value)
     }
 
     fn get_type(&self) -> u8 {
@@ -25,7 +25,11 @@ impl Tag for LongTag {
     }
 
     fn write(&self, serializer: &mut dyn BaseNBTSerializer) {
-        serializer.write_long(self.get_value())
+        if let Some(value) = self.get_value().downcast_ref::<i64>() {
+            serializer.write_long(*value)
+        } else {
+            panic!("Failed to downcast to LongTag");
+        }
     }
 }
 

@@ -16,8 +16,8 @@ impl Tag for DoubleTag {
         TypeId::of::<DoubleTag>()
     }
 
-    fn get_value(&self) -> f64 {
-        self.value
+    fn get_value(&self) -> Box<dyn Any> {
+        Box::new(self.value)
     }
 
     fn get_type(&self) -> u8 {
@@ -25,7 +25,11 @@ impl Tag for DoubleTag {
     }
 
     fn write(&self, serializer: &mut dyn BaseNBTSerializer) {
-        serializer.write_double(self.get_value())
+        if let Some(value) = self.get_value().downcast_ref::<f64>() {
+            serializer.write_double(*value)
+        } else {
+            panic!("Failed to downcast to DoubleTag");
+        }
     }
 }
 

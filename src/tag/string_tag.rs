@@ -16,8 +16,8 @@ impl Tag for StringTag {
         TypeId::of::<StringTag>()
     }
 
-    fn get_value(&self) -> String {
-        self.value.clone() // for now 'clone'
+    fn get_value(&self) -> Box<dyn Any> {
+        Box::new(self.value.clone()) // for now 'clone'
     }
 
     fn get_type(&self) -> u8 {
@@ -25,7 +25,11 @@ impl Tag for StringTag {
     }
 
     fn write(&self, serializer: &mut dyn BaseNBTSerializer) {
-        serializer.write_string(self.get_value())
+        if let Some(value) = self.get_value().downcast_ref::<String>() {
+            serializer.write_string(value.to_string());
+        } else {
+            panic!("Failed to downcast to StringTag");
+        }
     }
 }
 

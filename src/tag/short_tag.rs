@@ -16,8 +16,8 @@ impl Tag for ShortTag {
         TypeId::of::<ShortTag>()
     }
 
-    fn get_value(&self) -> i16 {
-        self.value
+    fn get_value(&self) -> Box<dyn Any> {
+        Box::new(self.value)
     }
 
     fn get_type(&self) -> u8 {
@@ -25,7 +25,11 @@ impl Tag for ShortTag {
     }
 
     fn write(&self, serializer: &mut dyn BaseNBTSerializer) {
-        serializer.write_short(self.get_value() as u16)
+        if let Some(value) = self.get_value().downcast_ref::<i16>() {
+            serializer.write_short(*value as u16);
+        } else {
+            panic!("Failed to downcast to ShortTag");
+        }
     }
 }
 

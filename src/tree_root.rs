@@ -2,7 +2,7 @@ use crate::tag::tag::Tag;
 
 pub struct TreeRoot {
     name: String,
-    root: dyn Tag
+    root: Box<dyn Tag>
 }
 
 impl TreeRoot {
@@ -10,10 +10,10 @@ impl TreeRoot {
         Box::new(TreeRoot{ name, root })
     }
 
-    /*pub fn must_get_compound_tag(&self) -> Result<CompoundTag, dyn Error> {
-        match self.root.as_any() {
+    /*pub fn must_get_compound_tag(&self) -> Option<CompoundTag> {
+        match self.root.as_any().downcast_ref() {
             CompoundTag(_) => self.root,
-            _ => Err("It's not a CompoundTag."),
+            _ => panic!("It's not a CompoundTag."),
         }
     }*/
 

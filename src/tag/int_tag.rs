@@ -16,8 +16,8 @@ impl Tag for IntTag {
         TypeId::of::<IntTag>()
     }
 
-    fn get_value(&self) -> u32 {
-        self.value // for now 'clone'
+    fn get_value(&self) -> Box<dyn Any> {
+        Box::new(self.value) // for now 'clone'
     }
 
     fn get_type(&self) -> u8 {
@@ -25,7 +25,11 @@ impl Tag for IntTag {
     }
 
     fn write(&self, serializer: &mut dyn BaseNBTSerializer) {
-        serializer.write_int(self.get_value())
+        if let Some(value) = self.get_value().downcast_ref::<u32>() {
+            serializer.write_int(*value)
+        } else {
+            panic!("Failed to downcast to IntTag");
+        }
     }
 }
 

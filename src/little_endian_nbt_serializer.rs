@@ -1,4 +1,3 @@
-use std::error::Error;
 use crate::base_nbt_serializer::BaseNBTSerializer;
 use binary_utils::binary::Stream;
 
@@ -41,10 +40,10 @@ impl BaseNBTSerializer for LittleEndianNBTSerializer {
         self.binary_stream.get_l_double()
     }
 
-    fn read_int_array(&mut self) -> Result<Vec<u32>, dyn Error> {
+    fn read_int_array(&mut self) -> Vec<u32> {
         let len = self.binary_stream.get_int();
         if len < 0 {
-            return Err(format!("Array length cannot be less than zero ({} < 0)", len));
+            panic!("Array length cannot be less than zero ({} < 0)", len);
         }
 
         let mut int_array = Vec::new();
@@ -56,7 +55,7 @@ impl BaseNBTSerializer for LittleEndianNBTSerializer {
             int_array.push(data_stream.get_l_int());
         }
 
-        Ok(int_array)
+        int_array
     }
 
     fn write_short(&mut self, data: u16) {

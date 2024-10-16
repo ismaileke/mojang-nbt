@@ -16,8 +16,8 @@ impl Tag for FloatTag {
         TypeId::of::<FloatTag>()
     }
 
-    fn get_value(&self) -> f32 {
-        self.value
+    fn get_value(&self) -> Box<dyn Any> {
+        Box::new(self.value)
     }
 
     fn get_type(&self) -> u8 {
@@ -25,7 +25,11 @@ impl Tag for FloatTag {
     }
 
     fn write(&self, serializer: &mut dyn BaseNBTSerializer) {
-        serializer.write_float(self.get_value())
+        if let Some(value) = self.get_value().downcast_ref::<f32>() {
+            serializer.write_float(*value)
+        } else {
+            panic!("Failed to downcast to FloatTag");
+        }
     }
 }
 

@@ -16,8 +16,8 @@ impl Tag for ByteTag {
         TypeId::of::<ByteTag>()
     }
 
-    fn get_value(&self) -> i8 {
-        self.value
+    fn get_value(&self) -> Box<dyn Any> {
+        Box::new(self.value)
     }
 
     fn get_type(&self) -> u8 {
@@ -25,7 +25,11 @@ impl Tag for ByteTag {
     }
 
     fn write(&self, serializer: &mut dyn BaseNBTSerializer) {
-        serializer.write_byte(self.get_value() as u8)
+        if let Some(value) = self.get_value().downcast_ref::<i8>() {
+            serializer.write_byte(*value as u8);
+        } else {
+            panic!("Failed to downcast to ByteTag");
+        }
     }
 }
 

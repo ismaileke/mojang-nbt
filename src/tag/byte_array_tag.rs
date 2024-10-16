@@ -16,8 +16,8 @@ impl Tag for ByteArrayTag {
         TypeId::of::<ByteArrayTag>()
     }
 
-    fn get_value(&self) -> Vec<u8> {
-        self.value.clone() // for now 'clone'
+    fn get_value(&self) -> Box<dyn Any> {
+        Box::new(self.value.clone()) // for now 'clone'
     }
 
     fn get_type(&self) -> u8 {
@@ -25,7 +25,11 @@ impl Tag for ByteArrayTag {
     }
 
     fn write(&self, serializer: &mut dyn BaseNBTSerializer) {
-        serializer.write_byte_array(self.get_value());
+        if let Some(value) = self.get_value().downcast_ref::<Vec<u8>>() {
+            serializer.write_byte_array(value.to_vec());
+        } else {
+            panic!("Failed to downcast to ByteArrayTag");
+        }
     }
 }
 

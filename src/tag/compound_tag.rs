@@ -1,5 +1,5 @@
 use crate::base_nbt_serializer::BaseNBTSerializer;
-use crate::nbt::{NBT, TAG_COMPOUND, TAG_END};
+use crate::nbt::{NBT, TAG_COMPOUND, TAG_END, TAG_LIST};
 use crate::tag::byte_array_tag::ByteArrayTag;
 use crate::tag::byte_tag::ByteTag;
 use crate::tag::double_tag::DoubleTag;
@@ -14,7 +14,7 @@ use crate::tag::tag::Tag;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
-#[derive!(Clone)]
+#[derive(Clone)]
 pub struct CompoundTag {
     value: HashMap<String, Box<dyn Tag>>
 }
@@ -29,7 +29,7 @@ impl Tag for CompoundTag {
     }
 
     fn get_value(&self) -> Box<dyn Any> {
-        self.value.clone().into()
+        Box::new(self.value.clone())
     }
 
     fn get_type(&self) -> u8 {
@@ -91,8 +91,8 @@ impl CompoundTag {
         let tag = self.value.get(&name);
 
         if let Some(list_tag) = tag {
-            if list_tag.as_any().is::<ListTag>() {
-                Some(list_tag.downcast::<ListTag>().ok()?)
+            return if list_tag.get_type() == TAG_LIST {
+                Option::from(list_tag.as_any().downcast_ref::<ListTag>().unwrap()).cloned()
             } else {
                 None
             }
@@ -100,12 +100,12 @@ impl CompoundTag {
         None
     }
 
-    pub fn get_compound_tag(&self, name: String) -> Option<&Box<dyn Tag>> {
+    pub fn get_compound_tag(&self, name: String) -> Option<CompoundTag> {
         let tag = self.value.get(&name);
 
         if let Some(compound_tag) = tag {
-            if compound_tag.as_any().is::<CompoundTag>() {
-                Some(compound_tag.downcast::<CompoundTag>().ok()?)
+            return if compound_tag.get_type() == TAG_COMPOUND {
+                Option::from(compound_tag.as_any().downcast_ref::<CompoundTag>().unwrap()).cloned()
             } else {
                 None
             }
@@ -138,7 +138,7 @@ impl CompoundTag {
         let value = self.get_tag_value::<ByteTag>(name)?;
 
         if let Some(value) = value.downcast_ref::<i8>() {
-            Some(*value)
+            return Some(*value);
         }
 
         None
@@ -148,7 +148,7 @@ impl CompoundTag {
         let value = self.get_tag_value::<ShortTag>(name)?;
 
         if let Some(value) = value.downcast_ref::<i16>() {
-            Some(*value)
+            return Some(*value);
         }
 
         None
@@ -158,7 +158,7 @@ impl CompoundTag {
         let value = self.get_tag_value::<IntTag>(name)?;
 
         if let Some(value) = value.downcast_ref::<u32>() {
-            Some(*value)
+            return Some(*value);
         }
 
         None
@@ -168,7 +168,7 @@ impl CompoundTag {
         let value = self.get_tag_value::<LongTag>(name)?;
 
         if let Some(value) = value.downcast_ref::<i64>() {
-            Some(*value)
+            return Some(*value);
         }
 
         None
@@ -178,7 +178,7 @@ impl CompoundTag {
         let value = self.get_tag_value::<FloatTag>(name)?;
 
         if let Some(value) = value.downcast_ref::<f32>() {
-            Some(*value)
+            return Some(*value);
         }
 
         None
@@ -188,7 +188,7 @@ impl CompoundTag {
         let value = self.get_tag_value::<DoubleTag>(name)?;
 
         if let Some(value) = value.downcast_ref::<f64>() {
-            Some(*value)
+            return Some(*value);
         }
 
         None
@@ -198,7 +198,7 @@ impl CompoundTag {
         let value = self.get_tag_value::<ByteArrayTag>(name)?;
 
         if let Some(value) = value.downcast_ref::<Vec<u8>>() {
-            Some(value.clone())
+            return Some(value.clone());
         }
 
         None
@@ -208,7 +208,7 @@ impl CompoundTag {
         let value = self.get_tag_value::<StringTag>(name)?;
 
         if let Some(value) = value.downcast_ref::<String>() {
-            Some(value.clone())
+            return Some(value.clone());
         }
 
         None
@@ -218,7 +218,7 @@ impl CompoundTag {
         let value = self.get_tag_value::<IntArrayTag>(name)?;
 
         if let Some(value) = value.downcast_ref::<Vec<u32>>() {
-            Some(value.clone())
+            return Some(value.clone());
         }
 
         None
@@ -260,7 +260,7 @@ impl CompoundTag {
         self.set_tag(name, Box::new(IntArrayTag::new(value)))
     }
 
-	pub fn merge(&self, other: CompoundTag) -> &CompoundTag {
+	pub fn merge(&self, other: CompoundTag) -> CompoundTag {
         let mut new = self.clone();
 
         for (name, named_tag) in &other.value {
