@@ -6,7 +6,6 @@ use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::iter::FromIterator;
 
-#[derive(Clone)]
 pub struct ListTag {
     tag_type: u8,
     value: Vec<Box<dyn Tag>>,
@@ -22,7 +21,8 @@ impl Tag for ListTag {
     }
 
     fn get_value(&self) -> Box<dyn Any> {
-        Box::new(self.value.clone())
+        let cloned_vec: Vec<Box<dyn Tag>> = self.value.iter().map(|tag| tag.clone_box()).collect();
+        Box::new(cloned_vec)
     }
 
     fn get_type(&self) -> u8 {
@@ -70,16 +70,16 @@ impl ListTag {
     }
 
     pub fn pop(&mut self) -> Option<Box<dyn Tag>> {
-        self.value.pop_back()
+        self.value.pop()
     }
 
     pub fn unshift(&mut self, tag: Box<dyn Tag>) {
         self.check_tag_type(&tag);
-        self.value.push_front(tag);
+        self.value.push(tag);
     }
 
     pub fn shift(&mut self) -> Option<Box<dyn Tag>> {
-        self.value.pop_front()
+        self.value.pop()
     }
 
     pub fn insert(&mut self, index: usize, tag: Box<dyn Tag>) {
@@ -96,11 +96,11 @@ impl ListTag {
     }
 
     pub fn first(&self) -> Option<Box<dyn Tag>> {
-        self.value.front().cloned()
+        Option::from(self.value.first().unwrap().clone_box())
     }
 
     pub fn last(&self) -> Option<Box<dyn Tag>> {
-        self.value.back().cloned()
+        Option::from(self.value.last().unwrap().clone_box())
     }
 
     pub fn set(&mut self, index: usize, tag: Box<dyn Tag>) {
@@ -159,5 +159,14 @@ impl ListTag {
         }
 
         Self::new(value, tag_type)
+    }
+}
+
+impl Clone for ListTag {
+    fn clone(&self) -> Self {
+        Self {
+            tag_type: self.tag_type,
+            value: self.value.iter().map(|tag| tag.clone_box()).collect(),
+        }
     }
 }

@@ -14,7 +14,6 @@ use crate::tag::tag::Tag;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
-#[derive(Clone)]
 pub struct CompoundTag {
     value: HashMap<String, Box<dyn Tag>>
 }
@@ -29,7 +28,8 @@ impl Tag for CompoundTag {
     }
 
     fn get_value(&self) -> Box<dyn Any> {
-        Box::new(self.value.clone())
+        let cloned_map: HashMap<String, Box<dyn Tag>> = self.value.iter().map(|(name, tag)| (name.clone(), tag.clone_box())).collect();
+        Box::new(cloned_map)
     }
 
     fn get_type(&self) -> u8 {
@@ -269,4 +269,12 @@ impl CompoundTag {
 
 		new
 	}
+}
+
+impl Clone for CompoundTag {
+    fn clone(&self) -> Self {
+        Self {
+            value: self.value.iter().map(|(k, v)| (k.clone(), v.clone_box())).collect(),
+        }
+    }
 }
