@@ -3,6 +3,7 @@ use crate::nbt::TAG_SHORT;
 use crate::tag::tag::Tag;
 use std::any::{Any, TypeId};
 
+#[derive(Clone)]
 pub struct ShortTag {
     value: i16
 }
@@ -30,6 +31,10 @@ impl Tag for ShortTag {
         } else {
             panic!("Failed to downcast to ShortTag");
         }
+    }
+
+    fn clone_box(&self) -> Box<dyn Tag> {
+        Box::new(self.clone())
     }
 }
 

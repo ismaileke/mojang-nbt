@@ -6,6 +6,7 @@ use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::iter::FromIterator;
 
+#[derive(Clone)]
 pub struct ListTag {
     tag_type: u8,
     value: Vec<Box<dyn Tag>>,
@@ -35,6 +36,10 @@ impl Tag for ListTag {
         for tag in &self.value {
             tag.write(serializer);
         }
+    }
+
+    fn clone_box(&self) -> Box<dyn Tag> {
+        Box::new(self.clone())
     }
 }
 
@@ -162,11 +167,11 @@ impl ListTag {
     }
 }
 
-impl Clone for ListTag {
+/*impl Clone for ListTag {
     fn clone(&self) -> Self {
         Self {
             tag_type: self.tag_type,
             value: self.value.iter().map(|tag| tag.clone_box()).collect(),
         }
     }
-}
+}*/

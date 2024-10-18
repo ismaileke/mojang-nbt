@@ -124,11 +124,6 @@ pub trait BaseNBTSerializer {
 
     fn read_byte_array(&mut self) -> Vec<u8> {
         let len = self.read_int();
-
-        if len < 0 {
-            panic!("Array length cannot be less than zero ({} < 0)", len);
-        }
-
         self.get_stream().get(len).expect("Base NBT Serializer, read_byte_array fn error")
     }
 

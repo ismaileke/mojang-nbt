@@ -3,6 +3,7 @@ use crate::nbt::TAG_BYTE_ARRAY;
 use crate::tag::tag::Tag;
 use std::any::{Any, TypeId};
 
+#[derive(Clone)]
 pub struct ByteArrayTag {
     value: Vec<u8>
 }
@@ -30,6 +31,10 @@ impl Tag for ByteArrayTag {
         } else {
             panic!("Failed to downcast to ByteArrayTag");
         }
+    }
+
+    fn clone_box(&self) -> Box<dyn Tag> {
+        Box::new(self.clone())
     }
 }
 

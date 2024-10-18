@@ -42,9 +42,6 @@ impl BaseNBTSerializer for LittleEndianNBTSerializer {
 
     fn read_int_array(&mut self) -> Vec<u32> {
         let len = self.binary_stream.get_int();
-        if len < 0 {
-            panic!("Array length cannot be less than zero ({} < 0)", len);
-        }
 
         let mut int_array = Vec::new();
 

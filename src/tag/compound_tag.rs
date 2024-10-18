@@ -14,6 +14,7 @@ use crate::tag::tag::Tag;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
+#[derive(Clone)]
 pub struct CompoundTag {
     value: HashMap<String, Box<dyn Tag>>
 }
@@ -43,6 +44,10 @@ impl Tag for CompoundTag {
             tag.write(serializer);
         }
         serializer.write_byte(TAG_END);
+    }
+
+    fn clone_box(&self) -> Box<dyn Tag> {
+        Box::new(self.clone())
     }
 }
 
@@ -271,10 +276,10 @@ impl CompoundTag {
 	}
 }
 
-impl Clone for CompoundTag {
+/*impl Clone for CompoundTag {
     fn clone(&self) -> Self {
         Self {
             value: self.value.iter().map(|(k, v)| (k.clone(), v.clone_box())).collect(),
         }
     }
-}
+}*/

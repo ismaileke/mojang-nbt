@@ -3,6 +3,7 @@ use crate::nbt::TAG_LONG;
 use crate::tag::tag::Tag;
 use std::any::{Any, TypeId};
 
+#[derive(Clone)]
 pub struct LongTag {
     value: i64
 }
@@ -30,6 +31,10 @@ impl Tag for LongTag {
         } else {
             panic!("Failed to downcast to LongTag");
         }
+    }
+
+    fn clone_box(&self) -> Box<dyn Tag> {
+        Box::new(self.clone())
     }
 }
 

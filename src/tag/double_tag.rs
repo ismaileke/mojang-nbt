@@ -3,6 +3,7 @@ use crate::nbt::TAG_DOUBLE;
 use crate::tag::tag::Tag;
 use std::any::{Any, TypeId};
 
+#[derive(Clone)]
 pub struct DoubleTag {
     value: f64
 }
@@ -30,6 +31,10 @@ impl Tag for DoubleTag {
         } else {
             panic!("Failed to downcast to DoubleTag");
         }
+    }
+
+    fn clone_box(&self) -> Box<dyn Tag> {
+        Box::new(self.clone())
     }
 }
 

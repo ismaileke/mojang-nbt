@@ -3,6 +3,7 @@ use crate::nbt::TAG_STRING;
 use crate::tag::tag::Tag;
 use std::any::{Any, TypeId};
 
+#[derive(Clone)]
 pub struct StringTag {
     value: String
 }
@@ -30,6 +31,10 @@ impl Tag for StringTag {
         } else {
             panic!("Failed to downcast to StringTag");
         }
+    }
+
+    fn clone_box(&self) -> Box<dyn Tag> {
+        Box::new(self.clone())
     }
 }
 

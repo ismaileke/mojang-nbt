@@ -3,6 +3,7 @@ use crate::nbt::TAG_INT;
 use crate::tag::tag::Tag;
 use std::any::{Any, TypeId};
 
+#[derive(Clone)]
 pub struct IntTag {
     value: u32
 }
@@ -30,6 +31,10 @@ impl Tag for IntTag {
         } else {
             panic!("Failed to downcast to IntTag");
         }
+    }
+
+    fn clone_box(&self) -> Box<dyn Tag> {
+        Box::new(self.clone())
     }
 }
 
