@@ -1,3 +1,4 @@
+use crate::tag::compound_tag::CompoundTag;
 use crate::tag::tag::Tag;
 
 pub struct TreeRoot {
@@ -10,12 +11,9 @@ impl TreeRoot {
         Box::new(TreeRoot{ name, root })
     }
 
-    /*pub fn must_get_compound_tag(&self) -> Option<CompoundTag> {
-        match self.root.as_any().downcast_ref() {
-            CompoundTag(_) => self.root,
-            _ => panic!("It's not a CompoundTag."),
-        }
-    }*/
+    pub fn must_get_compound_tag(&self) -> Option<CompoundTag> {
+        self.root.as_any().downcast_ref::<CompoundTag>()
+    }
 
     pub fn get_name(&self) -> String {
         self.name.clone()
