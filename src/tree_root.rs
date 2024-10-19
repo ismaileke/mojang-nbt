@@ -12,7 +12,7 @@ impl TreeRoot {
     }
 
     pub fn must_get_compound_tag(&self) -> Option<CompoundTag> {
-        self.root.as_any().downcast_ref::<CompoundTag>()
+        self.root.as_any().downcast_ref::<CompoundTag>().cloned()
     }
 
     pub fn get_name(&self) -> String {
