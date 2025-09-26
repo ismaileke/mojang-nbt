@@ -6,7 +6,7 @@ use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::iter::FromIterator;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ListTag {
     tag_type: u8,
     value: Vec<Box<dyn Tag>>,

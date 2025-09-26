@@ -1,7 +1,8 @@
 use crate::base_nbt_serializer::BaseNBTSerializer;
 use std::any::{Any, TypeId};
+use std::fmt::Debug;
 
-pub trait Tag: Any {
+pub trait Tag: Any + Debug {
 
     fn as_any(&self) -> &dyn Any;
 

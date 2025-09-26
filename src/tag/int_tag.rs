@@ -3,7 +3,7 @@ use crate::nbt::TAG_INT;
 use crate::tag::tag::Tag;
 use std::any::{Any, TypeId};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct IntTag {
     value: u32
 }

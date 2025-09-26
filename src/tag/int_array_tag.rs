@@ -3,7 +3,7 @@ use crate::nbt::TAG_INT_ARRAY;
 use crate::tag::tag::Tag;
 use std::any::{Any, TypeId};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct IntArrayTag {
     value: Vec<u32>
 }

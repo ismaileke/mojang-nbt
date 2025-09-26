@@ -14,7 +14,7 @@ use crate::tag::tag::Tag;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct CompoundTag {
     value: HashMap<String, Box<dyn Tag>>
 }
