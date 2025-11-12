@@ -89,7 +89,7 @@ pub trait BaseNBTSerializer {
 
         self.write_root(root);
 
-        self.get_stream().get_buffer()
+        Vec::from(self.get_stream().get_buffer())
     }
 
     fn write_headless(&mut self, data: Box<dyn Tag>) -> Vec<u8> where Self: Sized {
@@ -97,7 +97,7 @@ pub trait BaseNBTSerializer {
 
         data.write(self);
 
-        self.get_stream().get_buffer()
+        Vec::from(self.get_stream().get_buffer())
     }
 
     fn write_multiple(&mut self, tree_root: Vec<Box<TreeRoot>>) -> Vec<u8> where Self: Sized {
@@ -107,7 +107,7 @@ pub trait BaseNBTSerializer {
             self.write_root(root);
         }
 
-        self.get_stream().get_buffer()
+        Vec::from(self.get_stream().get_buffer())
     }
 
     fn read_byte(&mut self) -> u8 {
@@ -124,7 +124,7 @@ pub trait BaseNBTSerializer {
 
     fn read_byte_array(&mut self) -> Vec<u8> {
         let len = self.read_int();
-        self.get_stream().get(len).expect("Base NBT Serializer, read_byte_array fn error")
+        self.get_stream().get(len)
     }
 
     fn write_byte_array(&mut self, value: Vec<u8>) {
@@ -135,7 +135,7 @@ pub trait BaseNBTSerializer {
     fn read_string(&mut self) -> String {
         let len = self.read_short();
 
-        let value = self.get_stream().get(len as u32).expect("Base NBT Serializer, read_string fn error");
+        let value = self.get_stream().get(len as u32);
 
         String::from_utf8(value).expect("Base NBT Serializer, read_string fn, Vec<u8> to String(UTF-8) error")
     }
