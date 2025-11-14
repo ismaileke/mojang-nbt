@@ -7,11 +7,11 @@ pub trait BaseNBTSerializer {
 
     fn get_stream(&mut self) -> &mut Stream;
 
-    fn read_short(&mut self) -> u16;
+    fn read_short(&mut self) -> i16;
 
     fn read_signed_short(&mut self) -> i16;
 
-    fn read_int(&mut self) -> u32;
+    fn read_int(&mut self) -> i32;
 
     fn read_long(&mut self) -> i64;
 
@@ -19,11 +19,11 @@ pub trait BaseNBTSerializer {
 
     fn read_double(&mut self) -> f64;
 
-    fn read_int_array(&mut self) -> Vec<u32>;
+    fn read_int_array(&mut self) -> Vec<i32>;
 
-    fn write_short(&mut self, value: u16);
+    fn write_short(&mut self, value: i16);
 
-    fn write_int(&mut self, value: u32);
+    fn write_int(&mut self, value: i32);
 
     fn write_long(&mut self, value: i64);
 
@@ -31,7 +31,7 @@ pub trait BaseNBTSerializer {
 
     fn write_double(&mut self, value: f64);
 
-    fn write_int_array(&mut self, value: Vec<u32>);
+    fn write_int_array(&mut self, value: Vec<i32>);
 
     fn read_root(&mut self, _max_depth: u32) -> Box<TreeRoot> where Self: Sized {
         let tag_type =  self.read_byte();
@@ -124,11 +124,11 @@ pub trait BaseNBTSerializer {
 
     fn read_byte_array(&mut self) -> Vec<u8> {
         let len = self.read_int();
-        self.get_stream().get(len)
+        self.get_stream().get(len as u32)
     }
 
     fn write_byte_array(&mut self, value: Vec<u8>) {
-        self.write_int(value.len() as u32); //TODO: overflow
+        self.write_int(value.len() as i32); //TODO: overflow
         self.get_stream().put(value);
     }
 
@@ -141,7 +141,7 @@ pub trait BaseNBTSerializer {
     }
 
     fn write_string(&mut self, value: String) {
-        self.write_short(value.len() as u16);
+        self.write_short(value.len() as i16);
         self.get_stream().put(value.into_bytes());
     }
 }

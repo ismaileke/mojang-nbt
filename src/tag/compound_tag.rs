@@ -237,7 +237,7 @@ impl CompoundTag {
         self.set_tag(name, Box::new(ShortTag::new(value)))
     }
 
-    pub fn set_int(&mut self, name: String, value: u32) -> &mut Self {
+    pub fn set_int(&mut self, name: String, value: i32) -> &mut Self {
         self.set_tag(name, Box::new(IntTag::new(value)))
     }
 
@@ -261,7 +261,7 @@ impl CompoundTag {
         self.set_tag(name, Box::new(StringTag::new(value)))
     }
 
-    pub fn set_int_array(&mut self, name: String, value: Vec<u32>) -> &mut Self {
+    pub fn set_int_array(&mut self, name: String, value: Vec<i32>) -> &mut Self {
         self.set_tag(name, Box::new(IntArrayTag::new(value)))
     }
 

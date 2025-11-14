@@ -13,7 +13,7 @@ mod tests {
         let compound_tag = CompoundTag::new(HashMap::new())
             .set_byte("byte".to_string(), -128i8)
             .set_short("short".to_string(), 1i16)
-            .set_int("int".to_string(), 1u32)
+            .set_int("int".to_string(), 1i32)
             .set_long("long".to_string(), 132323i64)
             .set_float("float".to_string(), 1f32)
             .set_double("double".to_string(), 1f64)

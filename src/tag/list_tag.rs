@@ -32,7 +32,7 @@ impl Tag for ListTag {
 
     fn write(&self, serializer: &mut dyn BaseNBTSerializer) {
         serializer.write_byte(self.get_type());
-        serializer.write_int(self.count() as u32);
+        serializer.write_int(self.count() as i32);
         for tag in &self.value {
             tag.write(serializer);
         }

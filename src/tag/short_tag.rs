@@ -27,7 +27,7 @@ impl Tag for ShortTag {
 
     fn write(&self, serializer: &mut dyn BaseNBTSerializer) {
         if let Some(value) = self.get_value().downcast_ref::<i16>() {
-            serializer.write_short(*value as u16);
+            serializer.write_short(*value);
         } else {
             panic!("Failed to downcast to ShortTag");
         }
@@ -46,6 +46,6 @@ impl ShortTag {
     pub fn read(serializer: &mut dyn BaseNBTSerializer) -> ShortTag {
         let signed_short = serializer.read_signed_short();
 
-        ShortTag{ value: signed_short }
+        ShortTag { value: signed_short }
     }
 }

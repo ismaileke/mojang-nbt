@@ -17,15 +17,16 @@ impl BaseNBTSerializer for LittleEndianNBTSerializer {
         &mut self.binary_stream
     }
 
-    fn read_short(&mut self) -> u16 {
-        self.binary_stream.get_u16_le()
+    fn read_short(&mut self) -> i16 {
+        self.binary_stream.get_i16_le()
     }
 
     fn read_signed_short(&mut self) -> i16 {
         self.binary_stream.get_i16_le()
     }
-    fn read_int(&mut self) -> u32 {
-        self.binary_stream.get_u32_le()
+    
+    fn read_int(&mut self) -> i32 {
+        self.binary_stream.get_i32_le()
     }
 
     fn read_long(&mut self) -> i64 {
@@ -40,27 +41,27 @@ impl BaseNBTSerializer for LittleEndianNBTSerializer {
         self.binary_stream.get_f64_le()
     }
 
-    fn read_int_array(&mut self) -> Vec<u32> {
+    fn read_int_array(&mut self) -> Vec<i32> {
         let len = self.read_int();
 
         let mut int_array = Vec::new();
 
-        let mut data_stream = Stream::new(self.binary_stream.get(len * 4), 0);
+        let mut data_stream = Stream::new(self.binary_stream.get((len * 4) as u32), 0);
 
         while !data_stream.feof() {
             // big endian 4 byte integer
-            int_array.push(data_stream.get_u32_le());
+            int_array.push(data_stream.get_i32_le());
         }
 
         int_array
     }
 
-    fn write_short(&mut self, data: u16) {
-        self.binary_stream.put_u16_le(data)
+    fn write_short(&mut self, data: i16) {
+        self.binary_stream.put_i16_le(data)
     }
 
-    fn write_int(&mut self, data: u32) {
-        self.binary_stream.put_u32_le(data)
+    fn write_int(&mut self, data: i32) {
+        self.binary_stream.put_i32_le(data)
     }
 
     fn write_long(&mut self, data: i64) {
@@ -75,11 +76,11 @@ impl BaseNBTSerializer for LittleEndianNBTSerializer {
         self.binary_stream.put_f64_le(data)
     }
 
-    fn write_int_array(&mut self, data: Vec<u32>) {
-        self.write_int(data.len() as u32);
+    fn write_int_array(&mut self, data: Vec<i32>) {
+        self.write_int(data.len() as i32);
 
         for index in 0..data.len() {
-            self.binary_stream.put_u32_le(data[index]);
+            self.binary_stream.put_i32_le(data[index]);
         }
     }
 }

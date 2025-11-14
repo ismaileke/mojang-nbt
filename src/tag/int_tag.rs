@@ -5,7 +5,7 @@ use std::any::{Any, TypeId};
 
 #[derive(Clone, Debug)]
 pub struct IntTag {
-    value: u32
+    value: i32
 }
 
 impl Tag for IntTag {
@@ -26,7 +26,7 @@ impl Tag for IntTag {
     }
 
     fn write(&self, serializer: &mut dyn BaseNBTSerializer) {
-        if let Some(value) = self.get_value().downcast_ref::<u32>() {
+        if let Some(value) = self.get_value().downcast_ref::<i32>() {
             serializer.write_int(*value)
         } else {
             panic!("Failed to downcast to IntTag");
@@ -40,13 +40,13 @@ impl Tag for IntTag {
 
 impl IntTag {
 
-    pub fn new(value: u32) -> Self {
-        IntTag{ value }
+    pub fn new(value: i32) -> Self {
+        IntTag { value }
     }
 
     pub fn read(serializer: &mut dyn BaseNBTSerializer) -> IntTag {
         let integer = serializer.read_int();
 
-        IntTag{ value: integer }
+        IntTag { value: integer }
     }
 }
