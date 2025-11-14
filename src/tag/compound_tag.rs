@@ -219,10 +219,10 @@ impl CompoundTag {
         None
     }
 
-    pub fn get_int_array(&self, name: &str) -> Option<Vec<u32>> { // EDIT AGAIN
+    pub fn get_int_array(&self, name: &str) -> Option<Vec<i32>> { // EDIT AGAIN
         let value = self.get_tag_value::<IntArrayTag>(name)?;
 
-        if let Some(value) = value.downcast_ref::<Vec<u32>>() {
+        if let Some(value) = value.downcast_ref::<Vec<i32>>() {
             return Some(value.clone());
         }
 
