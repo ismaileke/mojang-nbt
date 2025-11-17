@@ -40,7 +40,7 @@ impl BaseNBTSerializer for BigEndianNBTSerializer {
     }
 
     fn read_int_array(&mut self) -> Vec<i32> {
-        let len = self.read_int();
+        let len = self.read_int(); // I hope that's right
 
         let mut int_array = Vec::new();
 

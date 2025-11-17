@@ -114,7 +114,7 @@ pub trait BaseNBTSerializer {
         self.get_stream().get_byte()
     }
 
-    fn read_signed_byte(&mut self) -> i8 { // CHECK AGAIN
+    fn read_signed_byte(&mut self) -> i8 {
         self.get_stream().get_byte() as i8
     }
 
@@ -123,7 +123,7 @@ pub trait BaseNBTSerializer {
     }
 
     fn read_byte_array(&mut self) -> Vec<u8> {
-        let len = self.read_int();
+        let len = self.read_int(); // I hope that's right
         self.get_stream().get(len as u32)
     }
 
@@ -133,7 +133,7 @@ pub trait BaseNBTSerializer {
     }
 
     fn read_string(&mut self) -> String {
-        let len = self.read_short();
+        let len = self.read_short(); // I hope that's right
 
         let value = self.get_stream().get(len as u32);
 

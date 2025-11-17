@@ -159,10 +159,10 @@ impl CompoundTag {
         None
     }
 
-    pub fn get_int(&self, name: &str) -> Option<u32> {
+    pub fn get_int(&self, name: &str) -> Option<i32> {
         let value = self.get_tag_value::<IntTag>(name)?;
 
-        if let Some(value) = value.downcast_ref::<u32>() {
+        if let Some(value) = value.downcast_ref::<i32>() {
             return Some(*value);
         }
 
