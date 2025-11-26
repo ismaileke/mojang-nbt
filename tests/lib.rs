@@ -6,11 +6,11 @@ mod tests {
     use mojang_nbt::nbt::TAG_COMPOUND;
     use mojang_nbt::tag::compound_tag::CompoundTag;
     use mojang_nbt::tree_root::TreeRoot;
-    use std::collections::HashMap;
+    use std::collections::{BTreeMap, HashMap};
 
     #[test]
     fn test() {
-        let compound_tag = CompoundTag::new(HashMap::new())
+        let compound_tag = CompoundTag::new(BTreeMap::new())
             .set_byte("byte".to_string(), -128i8)
             .set_short("short".to_string(), 1i16)
             .set_int("int".to_string(), 1i32)

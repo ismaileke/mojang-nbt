@@ -12,11 +12,11 @@ use crate::tag::short_tag::ShortTag;
 use crate::tag::string_tag::StringTag;
 use crate::tag::tag::Tag;
 use std::any::{Any, TypeId};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 #[derive(Clone, Debug)]
 pub struct CompoundTag {
-    value: HashMap<String, Box<dyn Tag>>
+    value: BTreeMap<String, Box<dyn Tag>>
 }
 
 impl Tag for CompoundTag {
@@ -29,7 +29,7 @@ impl Tag for CompoundTag {
     }
 
     fn get_value(&self) -> Box<dyn Any> {
-        let cloned_map: HashMap<String, Box<dyn Tag>> = self.value.iter().map(|(name, tag)| (name.clone(), tag.clone_box())).collect();
+        let cloned_map: BTreeMap<String, Box<dyn Tag>> = self.value.iter().map(|(name, tag)| (name.clone(), tag.clone_box())).collect();
         Box::new(cloned_map)
     }
 
@@ -53,12 +53,12 @@ impl Tag for CompoundTag {
 
 impl CompoundTag {
 
-    pub fn new(value: HashMap<String, Box<dyn Tag>>) -> Self {
+    pub fn new(value: BTreeMap<String, Box<dyn Tag>>) -> Self {
         CompoundTag{ value }
     }
 
     pub fn read(serializer: &mut dyn BaseNBTSerializer) -> CompoundTag {
-        let mut compound_tag = Self::new(HashMap::new());
+        let mut compound_tag = Self::new(BTreeMap::new());
 
         loop {
             let tag_type = serializer.read_byte();
