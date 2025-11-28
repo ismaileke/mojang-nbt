@@ -1,50 +1,16 @@
-use crate::base_nbt_serializer::BaseNBTSerializer;
-use crate::nbt;
-use crate::nbt::{NBT, TAG_LIST};
-use crate::tag::tag::Tag;
-use std::any::{Any, TypeId};
+use crate::nbt::NBT;
+use crate::tag::tag::{Tag, TagValue};
 use std::collections::HashMap;
-use std::iter::FromIterator;
+use crate::nbt_serializer::NBTSerializer;
 
 #[derive(Clone, Debug)]
 pub struct ListTag {
     tag_type: u8,
-    value: Vec<Box<dyn Tag>>,
-}
-
-impl Tag for ListTag {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-
-    fn get_type_id(&self) -> TypeId {
-        TypeId::of::<ListTag>()
-    }
-
-    fn get_value(&self) -> Box<dyn Any> {
-        let cloned_vec: Vec<Box<dyn Tag>> = self.value.iter().map(|tag| tag.clone_box()).collect();
-        Box::new(cloned_vec)
-    }
-
-    fn get_type(&self) -> u8 {
-        TAG_LIST
-    }
-
-    fn write(&self, serializer: &mut dyn BaseNBTSerializer) {
-        serializer.write_byte(self.get_type());
-        serializer.write_int(self.count() as i32);
-        for tag in &self.value {
-            tag.write(serializer);
-        }
-    }
-
-    fn clone_box(&self) -> Box<dyn Tag> {
-        Box::new(self.clone())
-    }
+    value: Vec<Tag>,
 }
 
 impl ListTag {
-    pub fn new(value: Vec<Box<dyn Tag>>, tag_type: u8) -> Self {
+    pub fn new(value: Vec<Tag>, tag_type: u8) -> Self {
         let list_tag = Self {
             tag_type,
             value: Vec::from_iter(value),
@@ -53,8 +19,8 @@ impl ListTag {
         list_tag
     }
 
-    pub fn get_all_values(&self) -> HashMap<usize, Box<dyn Any>> {
-        let mut values: HashMap<usize, Box<dyn Any>> = HashMap::new();
+    pub fn get_all_values(&self) -> HashMap<usize, TagValue> {
+        let mut values = HashMap::new();
 
         let mut i: usize = 0;
         for tag in &self.value {
@@ -69,25 +35,25 @@ impl ListTag {
         self.value.len()
     }
 
-    pub fn push(&mut self, tag: Box<dyn Tag>) {
+    pub fn push(&mut self, tag: Tag) {
         self.check_tag_type(&tag);
         self.value.push(tag);
     }
 
-    pub fn pop(&mut self) -> Option<Box<dyn Tag>> {
+    pub fn pop(&mut self) -> Option<Tag> {
         self.value.pop()
     }
 
-    pub fn unshift(&mut self, tag: Box<dyn Tag>) {
+    pub fn unshift(&mut self, tag: Tag) {
         self.check_tag_type(&tag);
         self.value.push(tag);
     }
 
-    pub fn shift(&mut self) -> Option<Box<dyn Tag>> {
+    pub fn shift(&mut self) -> Option<Tag> {
         self.value.pop()
     }
 
-    pub fn insert(&mut self, index: usize, tag: Box<dyn Tag>) {
+    pub fn insert(&mut self, index: usize, tag: Tag) {
         self.check_tag_type(&tag);
         self.value.insert(index, tag);
     }
@@ -96,19 +62,19 @@ impl ListTag {
         self.value.remove(index);
     }
 
-    pub fn get(&self, index: usize) -> Box<dyn Tag> {
-        self.value[index].clone_box() // Cloned
+    pub fn get(&self, index: usize) -> Tag {
+        self.value[index].clone()
     }
 
-    pub fn first(&self) -> Option<Box<dyn Tag>> {
-        Option::from(self.value.first().unwrap().clone_box())
+    pub fn first(&self) -> Option<Tag> {
+        Option::from(self.value.first().unwrap().clone())
     }
 
-    pub fn last(&self) -> Option<Box<dyn Tag>> {
-        Option::from(self.value.last().unwrap().clone_box())
+    pub fn last(&self) -> Option<Tag> {
+        Option::from(self.value.last().unwrap().clone())
     }
 
-    pub fn set(&mut self, index: usize, tag: Box<dyn Tag>) {
+    pub fn set(&mut self, index: usize, tag: Tag) {
         self.check_tag_type(&tag);
         self.value[index] = tag;
     }
@@ -132,8 +98,8 @@ impl ListTag {
         self.tag_type = tag_type;
     }
 
-    fn check_tag_type(&self, tag: &Box<dyn Tag>) {
-        let tag_type = tag.get_type();
+    fn check_tag_type(&self, tag: &Tag) {
+        let tag_type = tag.get_id();
 
         if tag_type != self.tag_type {
             panic!("Invalid tag of type {:?} assigned to ListTag", tag_type);
@@ -141,37 +107,40 @@ impl ListTag {
     }
 
     fn validate_tag_type(&self) {
-        if self.tag_type == nbt::TAG_END && !self.value.is_empty() {
+        if self.tag_type == NBT::TAG_END && !self.value.is_empty() {
             panic!("Cannot have a non-empty ListTag with tag type TAG_End");
         }
     }
 
-    pub fn read(serializer: &mut dyn BaseNBTSerializer) -> Self { // EDIT AGAIN?
+    pub fn read(serializer: &mut NBTSerializer) -> Self { // EDIT AGAIN?
         let mut tag_type = serializer.read_byte();
         let size = serializer.read_int();
 
-        let mut value: Vec<Box<dyn Tag>> = Vec::new();
+        let mut value: Vec<Tag> = Vec::new();
 
         if size > 0 {
-            if tag_type == nbt::TAG_END {
+            if tag_type == NBT::TAG_END {
                 panic!("Unexpected non-empty list of TAG_End");
             }
             for _ in 0..size {
                 value.push(NBT::create_tag(tag_type, serializer/*, tracker*/).unwrap());
             }
         } else {
-            tag_type = nbt::TAG_END; //Some older NBT implementations used TAG_Byte for empty lists.
+            tag_type = NBT::TAG_END; //Some older NBT implementations used TAG_Byte for empty lists.
         }
 
         Self::new(value, tag_type)
     }
-}
 
-/*impl Clone for ListTag {
-    fn clone(&self) -> Self {
-        Self {
-            tag_type: self.tag_type,
-            value: self.value.iter().map(|tag| tag.clone_box()).collect(),
+    pub fn write(&self, serializer: &mut NBTSerializer) {
+        serializer.write_byte(NBT::TAG_LIST); // I hope that's right
+        serializer.write_int(self.count() as i32);
+        for tag in &self.value {
+            tag.write(serializer);
         }
     }
-}*/
+
+    pub fn get_value(&self) -> Vec<Tag> {
+        self.value.iter().map(|tag| tag.clone()).collect()
+    }
+}

@@ -1,5 +1,5 @@
-use crate::base_nbt_serializer::BaseNBTSerializer;
-use crate::nbt::{NBT, TAG_COMPOUND, TAG_END, TAG_LIST};
+use crate::nbt_serializer::NBTSerializer;
+use crate::nbt::NBT;
 use crate::tag::byte_array_tag::ByteArrayTag;
 use crate::tag::byte_tag::ByteTag;
 use crate::tag::double_tag::DoubleTag;
@@ -10,59 +10,27 @@ use crate::tag::list_tag::ListTag;
 use crate::tag::long_tag::LongTag;
 use crate::tag::short_tag::ShortTag;
 use crate::tag::string_tag::StringTag;
-use crate::tag::tag::Tag;
-use std::any::{Any, TypeId};
+use crate::tag::tag::{Tag, TagValue};
 use linked_hash_map::LinkedHashMap;
+
 
 #[derive(Clone, Debug)]
 pub struct CompoundTag {
-    value: LinkedHashMap<String, Box<dyn Tag>>
-}
-
-impl Tag for CompoundTag {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-
-    fn get_type_id(&self) -> TypeId {
-        TypeId::of::<CompoundTag>()
-    }
-
-    fn get_value(&self) -> Box<dyn Any> {
-        let cloned_map: LinkedHashMap<String, Box<dyn Tag>> = self.value.iter().map(|(name, tag)| (name.clone(), tag.clone_box())).collect();
-        Box::new(cloned_map)
-    }
-
-    fn get_type(&self) -> u8 {
-        TAG_COMPOUND
-    }
-
-    fn write(&self, serializer: &mut dyn BaseNBTSerializer) {
-        for (name, tag) in &self.value {
-            serializer.write_byte(tag.get_type());
-            serializer.write_string(name.clone());
-            tag.write(serializer);
-        }
-        serializer.write_byte(TAG_END);
-    }
-
-    fn clone_box(&self) -> Box<dyn Tag> {
-        Box::new(self.clone())
-    }
+    value: LinkedHashMap<String, Tag>
 }
 
 impl CompoundTag {
 
-    pub fn new(value: LinkedHashMap<String, Box<dyn Tag>>) -> Self {
+    pub fn new(value: LinkedHashMap<String, Tag>) -> Self {
         CompoundTag{ value }
     }
 
-    pub fn read(serializer: &mut dyn BaseNBTSerializer) -> CompoundTag {
+    pub fn read(serializer: &mut NBTSerializer) -> CompoundTag {
         let mut compound_tag = Self::new(LinkedHashMap::new());
 
         loop {
             let tag_type = serializer.read_byte();
-            if tag_type == TAG_END {
+            if tag_type == NBT::TAG_END {
                 break;
             }
 
@@ -84,41 +52,47 @@ impl CompoundTag {
 
         compound_tag
     }
+
+    pub fn write(&self, serializer: &mut NBTSerializer) {
+        for (name, tag) in &self.value {
+            serializer.write_byte(tag.get_id());
+            serializer.write_string(name.clone());
+            tag.write(serializer);
+        }
+        serializer.write_byte(NBT::TAG_END);
+    }
+
     pub fn count(&self) -> usize {
         self.value.len()
     }
 
-    pub fn get_tag(&self, name: String) -> Option<&Box<dyn Tag>> {
+    pub fn get_tag(&self, name: String) -> Option<&Tag> {
         self.value.get(&name)
     }
 
     pub fn get_list_tag(&self, name: String) -> Option<ListTag> {
-        let tag = self.value.get(&name);
+        let opt_tag = self.value.get(&name);
 
-        if let Some(list_tag) = tag {
-            return if list_tag.get_type() == TAG_LIST {
-                Option::from(list_tag.as_any().downcast_ref::<ListTag>().unwrap()).cloned()
-            } else {
-                None
-            }
+        if let Some(tag) = opt_tag {
+            return if let Tag::List(list_tag) = tag {
+                Option::from(list_tag.clone())
+            } else { None }
         }
         None
     }
 
     pub fn get_compound_tag(&self, name: String) -> Option<CompoundTag> {
-        let tag = self.value.get(&name);
+        let opt_tag = self.value.get(&name);
 
-        if let Some(compound_tag) = tag {
-            return if compound_tag.get_type() == TAG_COMPOUND {
-                Option::from(compound_tag.as_any().downcast_ref::<CompoundTag>().unwrap()).cloned()
-            } else {
-                None
-            }
+        if let Some(tag) = opt_tag {
+            return if let Tag::Compound(compound_tag) = tag {
+                Option::from(compound_tag.clone())
+            } else { None }
         }
         None
     }
 
-    pub fn set_tag(&mut self, name: String, tag: Box<dyn Tag>) -> &mut Self {
+    pub fn set_tag(&mut self, name: String, tag: Tag) -> &mut Self {
         self.value.insert(name, tag);
         self
     }
@@ -129,157 +103,138 @@ impl CompoundTag {
         }
     }
 
-    pub fn get_tag_value<T: 'static + Tag>(&self, name: &str) -> Option<Box<dyn Any>> {
-        let tag = self.value.get(name)?;
-
-        if tag.get_type_id() == TypeId::of::<T>() {
-            Some(tag.get_value())
-        } else {
-            None
-        }
+    pub fn get_tag_value(&self, name: &str) -> TagValue {
+        let tag = self.value.get(name).expect(&format!("Tag {} not found", name));
+        tag.get_value()
     }
 
-    pub fn get_byte(&self, name: &str) -> Option<i8> {          //  u8    ?????????????????????????
-        let value = self.get_tag_value::<ByteTag>(name)?;
-
-        if let Some(value) = value.downcast_ref::<i8>() {
-            return Some(*value);
+    pub fn get_byte(&self, name: &str) -> Option<i8> {
+        let value = self.get_tag_value(name);
+        if let TagValue::Byte(v) = value {
+            return Some(v);
         }
 
         None
     }
 
     pub fn get_short(&self, name: &str) -> Option<i16> {
-        let value = self.get_tag_value::<ShortTag>(name)?;
-
-        if let Some(value) = value.downcast_ref::<i16>() {
-            return Some(*value);
+        let value = self.get_tag_value(name);
+        if let TagValue::Short(v) = value {
+            return Some(v);
         }
 
         None
     }
 
     pub fn get_int(&self, name: &str) -> Option<i32> {
-        let value = self.get_tag_value::<IntTag>(name)?;
-
-        if let Some(value) = value.downcast_ref::<i32>() {
-            return Some(*value);
+        let value = self.get_tag_value(name);
+        if let TagValue::Int(v) = value {
+            return Some(v);
         }
 
         None
     }
 
     pub fn get_long(&self, name: &str) -> Option<i64> {
-        let value = self.get_tag_value::<LongTag>(name)?;
-
-        if let Some(value) = value.downcast_ref::<i64>() {
-            return Some(*value);
+        let value = self.get_tag_value(name);
+        if let TagValue::Long(v) = value {
+            return Some(v);
         }
 
         None
     }
 
     pub fn get_float(&self, name: &str) -> Option<f32> {
-        let value = self.get_tag_value::<FloatTag>(name)?;
-
-        if let Some(value) = value.downcast_ref::<f32>() {
-            return Some(*value);
+        let value = self.get_tag_value(name);
+        if let TagValue::Float(v) = value {
+            return Some(v);
         }
 
         None
     }
 
     pub fn get_double(&self, name: &str) -> Option<f64> {
-        let value = self.get_tag_value::<DoubleTag>(name)?;
-
-        if let Some(value) = value.downcast_ref::<f64>() {
-            return Some(*value);
+        let value = self.get_tag_value(name);
+        if let TagValue::Double(v) = value {
+            return Some(v);
         }
 
         None
     }
 
     pub fn get_byte_array(&self, name: &str) -> Option<Vec<u8>> {
-        let value = self.get_tag_value::<ByteArrayTag>(name)?;
-
-        if let Some(value) = value.downcast_ref::<Vec<u8>>() {
-            return Some(value.clone());
+        let value = self.get_tag_value(name);
+        if let TagValue::ByteArray(v) = value {
+            return Some(v);
         }
 
         None
     }
 
     pub fn get_string(&self, name: &str) -> Option<String> {
-        let value = self.get_tag_value::<StringTag>(name)?;
-
-        if let Some(value) = value.downcast_ref::<String>() {
-            return Some(value.clone());
+        let value = self.get_tag_value(name);
+        if let TagValue::String(v) = value {
+            return Some(v);
         }
 
         None
     }
 
     pub fn get_int_array(&self, name: &str) -> Option<Vec<i32>> { // EDIT AGAIN
-        let value = self.get_tag_value::<IntArrayTag>(name)?;
-
-        if let Some(value) = value.downcast_ref::<Vec<i32>>() {
-            return Some(value.clone());
+        let value = self.get_tag_value(name);
+        if let TagValue::IntArray(v) = value {
+            return Some(v);
         }
 
         None
     }
 
     pub fn set_byte(&mut self, name: String, value: i8) -> &mut Self {
-        self.set_tag(name, Box::new(ByteTag::new(value)))
+        self.set_tag(name, Tag::Byte(ByteTag::new(value)))
     }
 
     pub fn set_short(&mut self, name: String, value: i16) -> &mut Self {
-        self.set_tag(name, Box::new(ShortTag::new(value)))
+        self.set_tag(name, Tag::Short(ShortTag::new(value)))
     }
 
     pub fn set_int(&mut self, name: String, value: i32) -> &mut Self {
-        self.set_tag(name, Box::new(IntTag::new(value)))
+        self.set_tag(name, Tag::Int(IntTag::new(value)))
     }
 
     pub fn set_long(&mut self, name: String, value: i64) -> &mut Self {
-        self.set_tag(name, Box::new(LongTag::new(value)))
+        self.set_tag(name, Tag::Long(LongTag::new(value)))
     }
 
     pub fn set_float(&mut self, name: String, value: f32) -> &mut Self {
-        self.set_tag(name, Box::new(FloatTag::new(value)))
+        self.set_tag(name, Tag::Float(FloatTag::new(value)))
     }
 
     pub fn set_double(&mut self, name: String, value: f64) -> &mut Self {
-        self.set_tag(name, Box::new(DoubleTag::new(value)))
+        self.set_tag(name, Tag::Double(DoubleTag::new(value)))
     }
 
     pub fn set_byte_array(&mut self, name: String, value: Vec<u8>) -> &mut Self {
-        self.set_tag(name, Box::new(ByteArrayTag::new(value)))
+        self.set_tag(name, Tag::ByteArray(ByteArrayTag::new(value)))
     }
 
     pub fn set_string(&mut self, name: String, value: String) -> &mut Self {
-        self.set_tag(name, Box::new(StringTag::new(value)))
+        self.set_tag(name, Tag::String(StringTag::new(value)))
     }
 
     pub fn set_int_array(&mut self, name: String, value: Vec<i32>) -> &mut Self {
-        self.set_tag(name, Box::new(IntArrayTag::new(value)))
+        self.set_tag(name, Tag::IntArray(IntArrayTag::new(value)))
     }
 
 	pub fn merge(&self, other: CompoundTag) -> CompoundTag {
         let mut new = self.clone();
-
         for (name, named_tag) in &other.value {
-            new.set_tag(name.clone(), named_tag.clone_box());
+            new.set_tag(name.clone(), named_tag.clone());
         }
 
 		new
 	}
-}
 
-/*impl Clone for CompoundTag {
-    fn clone(&self) -> Self {
-        Self {
-            value: self.value.iter().map(|(k, v)| (k.clone(), v.clone_box())).collect(),
-        }
+    pub fn get_value(&self) -> LinkedHashMap<String, Tag> {
+        self.value.iter().map(|(name, tag)| (name.clone(), tag.clone())).collect()
     }
-}*/
+}
