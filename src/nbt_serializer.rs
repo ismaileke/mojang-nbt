@@ -6,6 +6,7 @@ use crate::tree_root::TreeRoot;
 pub enum NBTSerializer {
     BigEndian(Stream),
     LittleEndian(Stream),
+    Network(Stream)
 }
 
 impl NBTSerializer {
@@ -17,10 +18,15 @@ impl NBTSerializer {
         NBTSerializer::LittleEndian(Stream::new(vec![], 0))
     }
 
+    pub fn new_network() -> Self {
+        NBTSerializer::Network(Stream::new(vec![], 0))
+    }
+
     pub fn get_stream(&mut self) -> &mut Stream {
         match self {
             NBTSerializer::BigEndian(stream) => stream,
             NBTSerializer::LittleEndian(stream) => stream,
+            NBTSerializer::Network(stream) => stream
         }
     }
 
@@ -28,6 +34,7 @@ impl NBTSerializer {
         match self {
             NBTSerializer::BigEndian(stream) => stream.get_i16_be(),
             NBTSerializer::LittleEndian(stream) => stream.get_i16_le(),
+            NBTSerializer::Network(stream) => stream.get_i16_le()
         }
     }
 
@@ -35,6 +42,7 @@ impl NBTSerializer {
         match self {
             NBTSerializer::BigEndian(stream) => stream.get_i16_be(),
             NBTSerializer::LittleEndian(stream) => stream.get_i16_le(),
+            NBTSerializer::Network(stream) => stream.get_i16_le(),
         }
     }
 
@@ -42,6 +50,7 @@ impl NBTSerializer {
         match self {
             NBTSerializer::BigEndian(stream) => stream.get_i32_be(),
             NBTSerializer::LittleEndian(stream) => stream.get_i32_le(),
+            NBTSerializer::Network(stream) => stream.get_var_i32()
         }
     }
 
@@ -49,6 +58,7 @@ impl NBTSerializer {
         match self {
             NBTSerializer::BigEndian(stream) => stream.get_i64_be(),
             NBTSerializer::LittleEndian(stream) => stream.get_i64_le(),
+            NBTSerializer::Network(stream) => stream.get_var_i64()
         }
     }
 
@@ -56,6 +66,7 @@ impl NBTSerializer {
         match self {
             NBTSerializer::BigEndian(stream) => stream.get_f32_be(),
             NBTSerializer::LittleEndian(stream) => stream.get_f32_le(),
+            NBTSerializer::Network(stream) => stream.get_f32_le()
         }
     }
 
@@ -63,6 +74,7 @@ impl NBTSerializer {
         match self {
             NBTSerializer::BigEndian(stream) => stream.get_f64_be(),
             NBTSerializer::LittleEndian(stream) => stream.get_f64_le(),
+            NBTSerializer::Network(stream) => stream.get_f64_le()
         }
     }
 
@@ -76,7 +88,8 @@ impl NBTSerializer {
         while !data_stream.feof() {
             match self {
                 NBTSerializer::BigEndian(_) => int_array.push(data_stream.get_i32_be()),
-                NBTSerializer::LittleEndian(_) => int_array.push(data_stream.get_i32_le())
+                NBTSerializer::LittleEndian(_) => int_array.push(data_stream.get_i32_le()),
+                NBTSerializer::Network(_) => int_array.push(data_stream.get_var_i32())
             }
         }
 
@@ -87,6 +100,7 @@ impl NBTSerializer {
         match self {
             NBTSerializer::BigEndian(stream) => stream.put_i16_be(data),
             NBTSerializer::LittleEndian(stream) => stream.put_i16_le(data),
+            NBTSerializer::Network(stream) => stream.put_i16_le(data)
         }
     }
 
@@ -94,6 +108,7 @@ impl NBTSerializer {
         match self {
             NBTSerializer::BigEndian(stream) => stream.put_i32_be(data),
             NBTSerializer::LittleEndian(stream) => stream.put_i32_le(data),
+            NBTSerializer::Network(stream) => stream.put_var_i32(data)
         }
     }
 
@@ -101,6 +116,7 @@ impl NBTSerializer {
         match self {
             NBTSerializer::BigEndian(stream) => stream.put_i64_be(data),
             NBTSerializer::LittleEndian(stream) => stream.put_i64_le(data),
+            NBTSerializer::Network(stream) => stream.put_var_i64(data)
         }
     }
 
@@ -108,6 +124,7 @@ impl NBTSerializer {
         match self {
             NBTSerializer::BigEndian(stream) => stream.put_f32_be(value),
             NBTSerializer::LittleEndian(stream) => stream.put_f32_le(value),
+            NBTSerializer::Network(stream) => stream.put_f32_le(value)
         }
     }
 
@@ -115,6 +132,7 @@ impl NBTSerializer {
         match self {
             NBTSerializer::BigEndian(stream) => stream.put_f64_be(data),
             NBTSerializer::LittleEndian(stream) => stream.put_f64_le(data),
+            NBTSerializer::Network(stream) => stream.put_f64_le(data)
         }
     }
 
@@ -124,7 +142,8 @@ impl NBTSerializer {
         for &value in &data {
             match self {
                 NBTSerializer::BigEndian(stream) => stream.put_i32_be(value),
-                NBTSerializer::LittleEndian(stream) => stream.put_i32_le(value)
+                NBTSerializer::LittleEndian(stream) => stream.put_i32_le(value),
+                NBTSerializer::Network(_stream) => self.write_int(value)
             }
         }
     }
@@ -232,15 +251,36 @@ impl NBTSerializer {
     }
 
     pub fn read_string(&mut self) -> String {
-        let len = self.read_short();
+        match self {
+            NBTSerializer::Network(stream) => {
+                let len = stream.get_var_u32();
 
-        let value = self.get_stream().get(len as u32);
+                let value = stream.get(len);
 
-        String::from_utf8(value).expect("NBT Serializer, read_string fn, Vec<u8> to String(UTF-8) error")
+                String::from_utf8(value).expect("NBT Serializer, read_string fn, Vec<u8> to String(UTF-8) error")
+            },
+            NBTSerializer::BigEndian(stream) |
+            NBTSerializer::LittleEndian(stream) => {
+                let len = self.read_short();
+
+                let value = self.get_stream().get(len as u32);
+
+                String::from_utf8(value).expect("NBT Serializer, read_string fn, Vec<u8> to String(UTF-8) error")
+            }
+        }
     }
 
     pub fn write_string(&mut self, value: String) {
-        self.write_short(value.len() as i16);
-        self.get_stream().put(value.into_bytes());
+        match self {
+            NBTSerializer::Network(stream) => {
+                stream.put_var_u32(value.len() as u32);
+                stream.put(value.into_bytes());
+            },
+            NBTSerializer::BigEndian(stream) |
+            NBTSerializer::LittleEndian(stream) => {
+                self.write_short(value.len() as i16);
+                self.get_stream().put(value.into_bytes());
+            }
+        }
     }
 }
