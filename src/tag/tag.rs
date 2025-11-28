@@ -1,4 +1,6 @@
 use linked_hash_map::LinkedHashMap;
+use serde::{Serialize, Serializer};
+use serde::ser::SerializeMap;
 use crate::nbt::NBT;
 use crate::nbt_serializer::NBTSerializer;
 use crate::tag::byte_array_tag::ByteArrayTag;
@@ -13,7 +15,7 @@ use crate::tag::long_tag::LongTag;
 use crate::tag::short_tag::ShortTag;
 use crate::tag::string_tag::StringTag;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub enum Tag {
     ByteArray(ByteArrayTag),
     Byte(ByteTag),
@@ -28,9 +30,11 @@ pub enum Tag {
     String(StringTag)
 }
 
+#[derive(Clone, Debug, Serialize)]
 pub enum TagValue {
     ByteArray(Vec<u8>),
     Byte(i8),
+    #[serde(serialize_with = "serialize_map")]
     Compound(LinkedHashMap<String, Tag>),
     Double(f64),
     Float(f32),
@@ -89,4 +93,15 @@ impl Tag {
             Tag::String(tag) => TagValue::String(tag.get_value())
         }
     }
+}
+
+fn serialize_map<S>(map: &LinkedHashMap<String, Tag>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    let mut s = serializer.serialize_map(Some(map.len()))?;
+    for (k, v) in map {
+        s.serialize_entry(k, v)?;
+    }
+    s.end()
 }

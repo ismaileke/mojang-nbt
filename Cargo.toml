@@ -5,4 +5,5 @@ edition = "2021"
 
 [dependencies]
 binary-utils = { git = "https://github.com/ismaileke/binary-utils.git", branch = "master" }
-linked-hash-map = "0.5.6"
+linked-hash-map = { version = "0.5.6", features = ["serde"] }
+serde = { version = "1.0.228", features = ["derive"] }

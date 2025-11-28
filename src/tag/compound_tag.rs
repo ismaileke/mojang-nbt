@@ -12,10 +12,12 @@ use crate::tag::short_tag::ShortTag;
 use crate::tag::string_tag::StringTag;
 use crate::tag::tag::{Tag, TagValue};
 use linked_hash_map::LinkedHashMap;
+use serde::ser::SerializeMap;
+use serde::Serializer;
 
-
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize)]
 pub struct CompoundTag {
+    #[serde(serialize_with = "serialize_map")]
     value: LinkedHashMap<String, Tag>
 }
 
@@ -237,4 +239,15 @@ impl CompoundTag {
     pub fn get_value(&self) -> LinkedHashMap<String, Tag> {
         self.value.iter().map(|(name, tag)| (name.clone(), tag.clone())).collect()
     }
+}
+
+fn serialize_map<S>(map: &LinkedHashMap<String, Tag>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    let mut s = serializer.serialize_map(Some(map.len()))?;
+    for (k, v) in map {
+        s.serialize_entry(k, v)?;
+    }
+    s.end()
 }

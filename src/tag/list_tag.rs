@@ -3,7 +3,7 @@ use crate::tag::tag::{Tag, TagValue};
 use std::collections::HashMap;
 use crate::nbt_serializer::NBTSerializer;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize)]
 pub struct ListTag {
     tag_type: u8,
     value: Vec<Tag>,

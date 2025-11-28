@@ -1,6 +1,6 @@
 use crate::nbt_serializer::NBTSerializer;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize)]
 pub struct LongTag {
     value: i64
 }
