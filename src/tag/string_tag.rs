@@ -1,4 +1,4 @@
-use crate::nbt_serializer::NBTSerializer;
+use crate::nbt_serializer::{NBTReader, NBTWriter};
 
 #[derive(Clone, Debug, serde::Serialize)]
 pub struct StringTag {
@@ -15,12 +15,12 @@ impl StringTag {
         self.value.clone()
     }
 
-    pub fn read(serializer: &mut NBTSerializer) -> StringTag {
+    pub fn read(serializer: &mut NBTReader) -> StringTag {
         let string_data = serializer.read_string();
-        StringTag{ value: string_data }
+        StringTag{ value: string_data.to_string() }
     }
 
-    pub fn write(&self, serializer: &mut NBTSerializer) {
-        serializer.write_string(self.get_value());
+    pub fn write(&self, serializer: &mut NBTWriter) {
+        serializer.write_string(self.get_value().as_str());
     }
 }

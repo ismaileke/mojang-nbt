@@ -1,4 +1,4 @@
-use crate::nbt_serializer::NBTSerializer;
+use crate::nbt_serializer::{NBTReader, NBTWriter};
 
 #[derive(Clone, Debug, serde::Serialize)]
 pub struct ByteArrayTag {
@@ -15,13 +15,13 @@ impl ByteArrayTag {
         self.value.clone()
     }
 
-    pub fn read(serializer: &mut NBTSerializer) -> ByteArrayTag {
+    pub fn read(serializer: &mut NBTReader) -> ByteArrayTag {
         let byte_array = serializer.read_byte_array();
 
-        ByteArrayTag{ value: byte_array }
+        ByteArrayTag{ value: byte_array.to_vec() }
     }
 
-    pub fn write(&self, serializer: &mut NBTSerializer) {
-        serializer.write_byte_array(self.get_value());
+    pub fn write(&self, serializer: &mut NBTWriter) {
+        serializer.write_byte_array(self.get_value().as_slice());
     }
 }

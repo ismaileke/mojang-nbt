@@ -1,7 +1,7 @@
 use crate::nbt::NBT;
 use crate::tag::tag::{Tag, TagValue};
+use crate::nbt_serializer::{NBTReader, NBTWriter};
 use std::collections::HashMap;
-use crate::nbt_serializer::NBTSerializer;
 
 #[derive(Clone, Debug, serde::Serialize)]
 pub struct ListTag {
@@ -112,7 +112,7 @@ impl ListTag {
         }
     }
 
-    pub fn read(serializer: &mut NBTSerializer) -> Self { // EDIT AGAIN?
+    pub fn read(serializer: &mut NBTReader) -> Self { // EDIT AGAIN?
         let mut tag_type = serializer.read_byte();
         let size = serializer.read_int();
 
@@ -132,7 +132,7 @@ impl ListTag {
         Self::new(value, tag_type)
     }
 
-    pub fn write(&self, serializer: &mut NBTSerializer) {
+    pub fn write(&self, serializer: &mut NBTWriter) {
         serializer.write_byte(NBT::TAG_LIST); // I hope that's right
         serializer.write_int(self.count() as i32);
         for tag in &self.value {

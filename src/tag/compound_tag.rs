@@ -1,4 +1,4 @@
-use crate::nbt_serializer::NBTSerializer;
+use crate::nbt_serializer::{NBTReader, NBTWriter};
 use crate::nbt::NBT;
 use crate::tag::byte_array_tag::ByteArrayTag;
 use crate::tag::byte_tag::ByteTag;
@@ -27,7 +27,7 @@ impl CompoundTag {
         CompoundTag{ value }
     }
 
-    pub fn read(serializer: &mut NBTSerializer) -> CompoundTag {
+    pub fn read(serializer: &mut NBTReader) -> CompoundTag {
         let mut compound_tag = Self::new(LinkedHashMap::new());
 
         loop {
@@ -45,7 +45,7 @@ impl CompoundTag {
             // and since we can't extricate this worked data from the rest in Anvil/McRegion worlds,
             // we can't throw an error - it would result in complete loss of the chunk.
             // TODO: Add a flag to enable throwing on this (strict mode).
-            if compound_tag.get_tag(name.clone()).is_some() {
+            if compound_tag.get_tag(name.to_string()).is_some() {
                 continue;
             }
 
@@ -55,10 +55,10 @@ impl CompoundTag {
         compound_tag
     }
 
-    pub fn write(&self, serializer: &mut NBTSerializer) {
+    pub fn write(&self, serializer: &mut NBTWriter) {
         for (name, tag) in &self.value {
             serializer.write_byte(tag.get_id());
-            serializer.write_string(name.clone());
+            serializer.write_string(name);
             tag.write(serializer);
         }
         serializer.write_byte(NBT::TAG_END);
@@ -94,8 +94,8 @@ impl CompoundTag {
         None
     }
 
-    pub fn set_tag(&mut self, name: String, tag: Tag) -> &mut Self {
-        self.value.insert(name, tag);
+    pub fn set_tag(&mut self, name: &str, tag: Tag) -> &mut Self {
+        self.value.insert(name.to_string(), tag);
         self
     }
 
@@ -191,46 +191,46 @@ impl CompoundTag {
         None
     }
 
-    pub fn set_byte(&mut self, name: String, value: i8) -> &mut Self {
+    pub fn set_byte(&mut self, name: &str, value: i8) -> &mut Self {
         self.set_tag(name, Tag::Byte(ByteTag::new(value)))
     }
 
-    pub fn set_short(&mut self, name: String, value: i16) -> &mut Self {
+    pub fn set_short(&mut self, name: &str, value: i16) -> &mut Self {
         self.set_tag(name, Tag::Short(ShortTag::new(value)))
     }
 
-    pub fn set_int(&mut self, name: String, value: i32) -> &mut Self {
+    pub fn set_int(&mut self, name: &str, value: i32) -> &mut Self {
         self.set_tag(name, Tag::Int(IntTag::new(value)))
     }
 
-    pub fn set_long(&mut self, name: String, value: i64) -> &mut Self {
+    pub fn set_long(&mut self, name: &str, value: i64) -> &mut Self {
         self.set_tag(name, Tag::Long(LongTag::new(value)))
     }
 
-    pub fn set_float(&mut self, name: String, value: f32) -> &mut Self {
+    pub fn set_float(&mut self, name: &str, value: f32) -> &mut Self {
         self.set_tag(name, Tag::Float(FloatTag::new(value)))
     }
 
-    pub fn set_double(&mut self, name: String, value: f64) -> &mut Self {
+    pub fn set_double(&mut self, name: &str, value: f64) -> &mut Self {
         self.set_tag(name, Tag::Double(DoubleTag::new(value)))
     }
 
-    pub fn set_byte_array(&mut self, name: String, value: Vec<u8>) -> &mut Self {
+    pub fn set_byte_array(&mut self, name: &str, value: Vec<u8>) -> &mut Self {
         self.set_tag(name, Tag::ByteArray(ByteArrayTag::new(value)))
     }
 
-    pub fn set_string(&mut self, name: String, value: String) -> &mut Self {
+    pub fn set_string(&mut self, name: &str, value: String) -> &mut Self {
         self.set_tag(name, Tag::String(StringTag::new(value)))
     }
 
-    pub fn set_int_array(&mut self, name: String, value: Vec<i32>) -> &mut Self {
+    pub fn set_int_array(&mut self, name: &str, value: Vec<i32>) -> &mut Self {
         self.set_tag(name, Tag::IntArray(IntArrayTag::new(value)))
     }
 
 	pub fn merge(&self, other: CompoundTag) -> CompoundTag {
         let mut new = self.clone();
         for (name, named_tag) in &other.value {
-            new.set_tag(name.clone(), named_tag.clone());
+            new.set_tag(name, named_tag.clone());
         }
 
 		new

@@ -2,7 +2,7 @@ use linked_hash_map::LinkedHashMap;
 use serde::{Serialize, Serializer};
 use serde::ser::SerializeMap;
 use crate::nbt::NBT;
-use crate::nbt_serializer::NBTSerializer;
+use crate::nbt_serializer::NBTWriter;
 use crate::tag::byte_array_tag::ByteArrayTag;
 use crate::tag::byte_tag::ByteTag;
 use crate::tag::compound_tag::CompoundTag;
@@ -62,7 +62,7 @@ impl Tag {
             Tag::String(_) => NBT::TAG_STRING
         }
     }
-    pub fn write(&self, serializer: &mut NBTSerializer) {
+    pub fn write(&self, serializer: &mut NBTWriter) {
         match self {
             Tag::ByteArray(tag) => tag.write(serializer),
             Tag::Byte(tag) => tag.write(serializer),

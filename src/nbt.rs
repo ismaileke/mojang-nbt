@@ -1,4 +1,4 @@
-use crate::nbt_serializer::NBTSerializer;
+use crate::nbt_serializer::NBTReader;
 use crate::tag::byte_array_tag::ByteArrayTag;
 use crate::tag::byte_tag::ByteTag;
 use crate::tag::compound_tag::CompoundTag;
@@ -28,7 +28,7 @@ impl NBT {
     pub const TAG_COMPOUND: u8 = 10;
     pub const TAG_INT_ARRAY: u8 = 11;
 
-    pub fn create_tag(tag_type: u8, serializer: &mut NBTSerializer) -> Option<Tag> {
+    pub fn create_tag(tag_type: u8, serializer: &mut NBTReader) -> Option<Tag> {
         match tag_type {
             Self::TAG_BYTE => Option::from(Tag::Byte(ByteTag::read(serializer))),
             Self::TAG_SHORT => Option::from(Tag::Short(ShortTag::read(serializer))),

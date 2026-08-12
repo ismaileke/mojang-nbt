@@ -1,13 +1,13 @@
 use crate::tag::compound_tag::CompoundTag;
 use crate::tag::tag::Tag;
 
-pub struct TreeRoot {
-    name: String,
+pub struct TreeRoot<'a> {
+    name: &'a str,
     root: Tag
 }
 
-impl TreeRoot {
-    pub fn new(root: Tag, name: String) -> TreeRoot {
+impl<'a> TreeRoot<'a> {
+    pub fn new(root: Tag, name: &'a str) -> TreeRoot<'a> {
         TreeRoot{ name, root }
     }
 
@@ -18,11 +18,11 @@ impl TreeRoot {
         }
     }
 
-    pub fn get_name(&self) -> String {
-        self.name.clone()
+    pub fn get_name(&self) -> &'a str {
+        self.name
     }
 
-    pub fn get_tag(&self) -> Tag {
-        self.root.clone()
+    pub fn get_tag(&self) -> &Tag {
+        &self.root
     }
 }
