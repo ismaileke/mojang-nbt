@@ -34,11 +34,11 @@ impl<'a> NBTReader<'a> {
         }
     }
 
-    pub fn read_short(&mut self) -> i16 {
+    pub fn read_short(&mut self) -> u16 {
         match self {
-            NBTReader::BigEndian(stream) => stream.get_i16_be(),
-            NBTReader::LittleEndian(stream) => stream.get_i16_le(),
-            NBTReader::Network(stream) => stream.get_i16_le()
+            NBTReader::BigEndian(stream) => stream.get_u16_be(),
+            NBTReader::LittleEndian(stream) => stream.get_u16_le(),
+            NBTReader::Network(stream) => stream.get_u16_le()
         }
     }
 
@@ -170,17 +170,13 @@ impl<'a> NBTReader<'a> {
         match self {
             NBTReader::Network(stream) => {
                 let len = stream.get_var_u32();
-
                 let value = stream.get(len as usize);
-
                 str::from_utf8(value).expect("NBT Serializer, read_string fn, Vec<u8> to String(UTF-8) error")
             },
             NBTReader::BigEndian(_stream) |
             NBTReader::LittleEndian(_stream) => {
                 let len = self.read_short();
-
                 let value = self.get_stream().get(len as usize);
-
                 str::from_utf8(value).expect("NBT Serializer, read_string fn, Vec<u8> to String(UTF-8) error")
             }
         }
